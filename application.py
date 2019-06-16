@@ -7,8 +7,15 @@ app = Flask(__name__)
 def home():
    return render_template("home.html")
 
+@app.route('/showdb', methods=['GET', 'POST'])
+def showdb():
+    cnxn = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:hello1997.database.windows.net,1433;Database=quakes;Uid=raja@hello1997;Pwd={azure@123};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
+    cursor = cnxn.cursor()
+    cursor.execute("SELECT * from all_month")
+    row = cursor.fetchall()
+    return render_template("showdb.html", row=row)
 
-   
+
 @app.route('/magnitude', methods=['GET', 'POST'])
 def magnitude():
     # server = 'hello1997.database.windows.net'
@@ -38,8 +45,8 @@ def location():
 
 port = int(os.getenv("PORT", 5000))
 if __name__ == '__main__':
-#    app.run(debug="true",port=port)
-     app.run("0.0.0.0",port=port)
+   app.run(debug="true",port=port)
+    #  app.run("0.0.0.0",port=port)
 
 
 

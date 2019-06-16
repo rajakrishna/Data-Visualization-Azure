@@ -1,6 +1,12 @@
 {% extends "about.html" %}
 {% block content %}
-        <h2>Search using Magnitude</h2>
+
+        <h2>View Database</h2>
+        <form action="/showdb" method="POST" >
+            <input type="submit" value="View">
+        </form>
+
+        <h2>Number of rows</h2>
         <form action="/magnitude" method="POST" >
             <input type="submit" value="Search">
          </form>
