@@ -3,11 +3,22 @@
 
         <h2>View Database</h2>
         <form action="/showdb" method="POST" >
+            Limit: <input type="text" name="limit">
             <input type="submit" value="View">
+        </form>
+
+
+        <h2>Search using Mag and Date</h2>
+        <form method="POST" action="/magsearch">
+            Magnitude 1: <input type="text" name="magnitude1">
+            Magnitude 2: <input type="text" name="magnitude2">
+            Limit: <input type="text" name="limit">
+        <input type="submit" value="Search">
         </form>
 
         <h2>Number of rows</h2>
         <form action="/magnitude" method="POST" >
+            Enter magnitude: <input type="text" name="mag">
             <input type="submit" value="Search">
          </form>
 
