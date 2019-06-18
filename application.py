@@ -99,7 +99,7 @@ def randomQueries():
 
     conn = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:hello1997.database.windows.net,1433;Database=quakes;Uid=raja@hello1997;Pwd={azure@123};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
     cursor = conn.cursor()
-    totalExecutionTime = 0
+    totalexectime = 0
     columns = ['time', 'latitude', 'longitude', 'place', 'mag']
 
     if withCache == 0:
@@ -110,11 +110,11 @@ def randomQueries():
         cursor.execute(query)
         endTime = time.time()
         list_total_dict = cursor.fetchall()
-        executionTime = (endTime - startTime) * 1000
-        firstExecutionTime = executionTime
+        exectime = (endTime - startTime) * 1000
+        firstexectime = exectime
 
         for i in range(noOfQueries-1):
-            totalExecutionTime = totalExecutionTime + executionTime
+            totalexectime = totalexectime + exectime
             magval = round(random.uniform(magstart, magend), 1)
             startTime = time.time()
             query = "SELECT 'time', latitude , longitude, place, mag FROM all_month WHERE mag = '" + str(magval) + "'"
@@ -131,7 +131,7 @@ def randomQueries():
                 memData.append(memDataDict)
             r.set(query, dumps(memData))
 
-            executionTime = (endTime - startTime) * 1000
+            exectime = (endTime - startTime) * 1000
          
     else:
         print('It is inside Redis now')
@@ -158,10 +158,10 @@ def randomQueries():
                         memDataDict[columns[i]] = val
                     memData.append(memDataDict)
                 r.set(memhash, dumps(memData))
-                executionTime = (endTime - startTime) * 1000
+                exectime = (endTime - startTime) * 1000
                 if x == 0:
-                    firstExecutionTime = executionTime
-                totalExecutionTime = totalExecutionTime + executionTime
+                    firstexectime = exectime
+                totalexectime = totalexectime + exectime
                 
 
             else:
@@ -170,12 +170,12 @@ def randomQueries():
                 if x == 0:
                     list_total_dict = list_data
                 endTime = time.time()
-            executionTime = (endTime - startTime) * 1000
+            exectime = (endTime - startTime) * 1000
             if x == 0:
-                    firstExecutionTime = executionTime
-            totalExecutionTime = totalExecutionTime + executionTime
+                    firstexectime = exectime
+            totalexectime = totalexectime + exectime
     conn.close()
-    return render_template('home.html', tableData=list_total_dict, tableDataLen=list_total_dict.__len__(), executionTime=totalExecutionTime, firstExecutionTime=firstExecutionTime)
+    return render_template('home.html', tableData=list_total_dict, tableDataLen=list_total_dict.__len__(), exectime=totalexectime, firstexectime=firstexectime)
 
 
 
