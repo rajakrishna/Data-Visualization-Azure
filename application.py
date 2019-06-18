@@ -11,7 +11,7 @@ from json import loads, dumps
 
 app = Flask(__name__)
 
-myHostname = "hello1997.redis.cache.windows.net"
+myHostname = "raja.redis.cache.windows.net"
 myPassword="Qjd4+MYTjcKhRRGyoeX7+i8Tc5gKgUPAXrEi86PzJJs="
 
 r = redis.StrictRedis(host=myHostname, port=6380, password=myPassword, ssl=True)
