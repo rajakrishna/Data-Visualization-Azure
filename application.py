@@ -239,7 +239,7 @@ def location():
 
     cnxn = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:hello1997.database.windows.net,1433;Database=quakes;Uid=raja@hello1997;Pwd={azure@123};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
     cursor = cnxn.cursor()
-    cursor.execute("Select time,mag,place from all_month where latitude >='"+lat1+"' and latitude <= '"+lat2+"' ")
+    cursor.execute("Select time,mag,place from quake3 where latitude >='"+lat1+"' and latitude <= '"+lat2+"' ")
     result = cursor.fetchall()
     print(result)
     return render_template("location.html", row=result)
