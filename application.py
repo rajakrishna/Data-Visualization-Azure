@@ -3,57 +3,182 @@ import os
 import pyodbc
 import random
 import redis
+import time
 import hashlib
 from json import loads, dumps
-import time
-app = Flask(__name__)
 
-@app.route('/')
-def home():
-   return render_template("home.html")
+
+
+app = Flask(__name__)
 
 myHostname = "raja.redis.cache.windows.net"
 myPassword="Qjd4+MYTjcKhRRGyoeX7+i8Tc5gKgUPAXrEi86PzJJs="
+r = redis.StrictRedis(host=myHostname, port=6380, password=myPassword, ssl=True)
 
 
-@app.route('/magnitude', methods=['GET','POST'])
-def mag():
-    columns = ['time', 'latitude', 'longitude','mag']
-    mag = str(request.form['mag'])
-    r = redis.StrictRedis(host=myHostname, port=6380,password=myPassword,ssl=True)
-    result = r.get(mag) 
+@app.route('/')
+def home():
+ return render_template("home.html")
+
+# @app.route('/createtable', methods=['GET','POST'])
+# def createtable():
+#     con = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:hello1997.database.windows.net,1433;Database=quakes;Uid=raja@hello1997;Pwd={azure@123};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
+#     cursor = con.cursor()
+#     start_time = time.time()
+#     cursor.execute("CREATE TABLE quakes.dbo.friend2(\
+#             [state] [nvarchar](20) NULL,\
+#             [2010] [nvarchar](10) NULL,\
+#             [2011] [nvarchar](10) NULL,\
+#             [2012] [nvarchar](10) NULL,\
+#             [2013] [nvarchar](10) NULL,\
+#             [2014] [nvarchar](10) NULL,\
+#             [2015] [nvarchar](10) NULL,\
+#             [2016] [nvarchar](10) NULL,\
+#             [2017] [nvarchar](10) NULL,\
+#             [2018] [nvarchar](10) NULL)")
+#     con.commit()
+#     end_time = time.time()
+#     con.close()
+#     time_taken = (end_time - start_time) * 1000
+#     return time_taken
+
+
+
+
+
+
+# @app.route('/magnitude', methods=['GET','POST'])
+# def mag():
+#     columns = ['time', 'latitude', 'longitude','mag']
+#     mag = str(request.form['mag'])
+#     r = redis.StrictRedis(host=myHostname, port=6380,password=myPassword,ssl=True)
+#     result = r.get(mag) 
     
-    # print(result)  
-    if result is None:
-        start=time.time()
-        print("retrieved from database")
-        con = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:hello1997.database.windows.net,1433;Database=quakes;Uid=raja@hello1997;Pwd={azure@123};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
-        cur = con.cursor()
-        query="select * from all_month where mag > "+mag
-        memhash = hashlib.sha256(query.encode()).hexdigest()
-        cur.execute(query)
-        rows= list(cur.fetchall())
-        mem=[]
-        memdata=[]
+#     # print(result)  
+#     if result is None:
+#         start=time.time()
+#         print("retrieved from database")
+#         con = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:hello1997.database.windows.net,1433;Database=quakes;Uid=raja@hello1997;Pwd={azure@123};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
+#         cur = con.cursor()
+#         query="select * from all_month where mag > "+mag
+#         memhash = hashlib.sha256(query.encode()).hexdigest()
+#         cur.execute(query)
+#         rows= list(cur.fetchall())
+#         mem=[]
+#         memdata=[]
         
-        for row in rows:
-            memdict=dict()
-            mem=[(0,row[0]),(1,row[1]),(2,row[2]),(3,row[4])]
-            # print(mem)
-            for j,val in mem:
-                memdict[columns[j]]=val
-            memdata.append(memdict)
-        r.set(mag,dumps(memdata))
-        end=time.time()
-        print('Time Taken')
-        print(end-start)
-        return render_template('magnitude1.html',rows=rows)
+#         for row in rows:
+#             memdict=dict()
+#             mem=[(0,row[0]),(1,row[1]),(2,row[2]),(3,row[4])]
+#             # print(mem)
+#             for j,val in mem:
+#                 memdict[columns[j]]=val
+#             memdata.append(memdict)
+#         r.set(mag,dumps(memdata))
+#         end=time.time()
+#         print('Time Taken')
+#         print(end-start)
+#         return render_template('magnitude1.html',rows=rows)
+#     else:
+#         result=loads(result.decode("utf-8"))
+#         resultdisplay=result
+        
+#         print("retrieved from memcache",result)
+#         return render_template('magnitude2.html',rows=result)
+
+
+
+@app.route('/randomqueries', methods=['GET', 'POST'])
+def randomQueries():
+    magnitudeStart = int(request.form['minmag'])
+    magnitudeEnd = int(request.form['maxmag'])
+    noOfQueries = int(request.form['count'])
+    withCache = int(request.form['Cache'])
+    list_dict_Data = []
+    list_dict_DataDisplay = []
+
+    conn = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:hello1997.database.windows.net,1433;Database=quakes;Uid=raja@hello1997;Pwd={azure@123};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
+    cursor = conn.cursor()
+    totalExecutionTime = 0
+    columns = ['time', 'latitude', 'longitude', 'place', 'mag']
+
+    if withCache == 0:
+        magnitude_value = round(random.uniform(magnitudeStart, magnitudeEnd), 1)
+        print(magnitude_value)
+        startTime = time.time()
+        query = "SELECT 'time', latitude, longitude, place, mag FROM all_month WHERE mag = '" + str(magnitude_value) + "'"
+        cursor.execute(query)
+        endTime = time.time()
+
+        list_dict_DataDisplay = cursor.fetchall()
+ 
+        executionTime = (endTime - startTime) * 1000
+        firstExecutionTime = executionTime
+
+        for i in range(noOfQueries-1):
+            totalExecutionTime = totalExecutionTime + executionTime
+            magnitude_value = round(random.uniform(magnitudeStart, magnitudeEnd), 1)
+            startTime = time.time()
+            query = "SELECT 'time', latitude , longitude, place, mag FROM all_month WHERE mag = '" + str(magnitude_value) + "'"
+            cursor.execute(query)
+            endTime = time.time()
+            list_dict_Data = list(cursor.fetchall())
+          
+            memData = []
+            for row in list_dict_Data:
+                memDataDict = dict()
+                for i, val in enumerate(row):
+                  
+                    memDataDict[columns[i]] = val
+                memData.append(memDataDict)
+            r.set(query, dumps(memData))
+
+            executionTime = (endTime - startTime) * 1000
+         
     else:
-        result=loads(result.decode("utf-8"))
-        resultdisplay=result
-        
-        print("retrieved from memcache",result)
-        return render_template('magnitude2.html',rows=result)
+        print('It is inside Redis now')
+        for x in range(noOfQueries):
+            print('x')
+            print(x)
+            magnitude_value = round(random.uniform(magnitudeStart, magnitudeEnd), 1)
+            query = "SELECT 'time', latitude , longitude, place, mag FROM all_month WHERE mag = '" + str(magnitude_value) + "'"
+            
+            memhash = hashlib.sha256(query.encode()).hexdigest()
+            startTime = time.time()
+            list_dict_Data = r.get(memhash)
+
+            if not list_dict_Data:             
+                print('Not in cache')
+                cursor.execute(query)
+                list_dict_Data = cursor.fetchall()             
+                if x == 0:
+                    list_dict_DataDisplay = list_dict_Data
+                endTime = time.time()
+                memData = []
+                for row in list_dict_Data:
+                    memDataDict = dict()
+                    for i, val in enumerate(row):
+                        memDataDict[columns[i]] = val
+                    memData.append(memDataDict)
+                r.set(memhash, dumps(memData))
+                executionTime = (endTime - startTime) * 1000
+                if x == 0:
+                    firstExecutionTime = executionTime
+                totalExecutionTime = totalExecutionTime + executionTime
+                
+
+            else:
+                print('In cache')
+                list_dict_Data = loads(list_dict_Data.decode())
+                if x == 0:
+                    list_dict_DataDisplay = list_dict_Data
+                endTime = time.time()
+            executionTime = (endTime - startTime) * 1000
+            if x == 0:
+                    firstExecutionTime = executionTime
+            totalExecutionTime = totalExecutionTime + executionTime
+    conn.close()
+    return render_template('home.html', tableData=list_dict_DataDisplay, tableDataLen=list_dict_DataDisplay.__len__(), executionTime=totalExecutionTime, firstExecutionTime=firstExecutionTime)
 
 
 
@@ -76,16 +201,14 @@ def mag():
 
 
 
-
-
-# @app.route('/showdb', methods=['GET', 'POST'])
-# def showdb():
-#     limit = request.form['limit']
-#     cnxn = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:hello1997.database.windows.net,1433;Database=quakes;Uid=raja@hello1997;Pwd={azure@123};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
-#     cursor = cnxn.cursor()
-#     cursor.execute("SELECT TOP "+limit+" * from all_month ")
-#     row = cursor.fetchall()
-#     return render_template("showdb.html", row=row)
+@app.route('/showdb', methods=['GET', 'POST'])
+def showdb():
+    limit = request.form['limit']
+    cnxn = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:hello1997.database.windows.net,1433;Database=quakes;Uid=raja@hello1997;Pwd={azure@123};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
+    cursor = cnxn.cursor()
+    cursor.execute("SELECT TOP "+limit+" * from all_month ")
+    row = cursor.fetchall()
+    return render_template("showdb.html", row=row)
 
 
 # @app.route('/magnitude', methods=['GET', 'POST'])
@@ -138,8 +261,8 @@ def mag():
 
 port = int(os.getenv("PORT", 5000))
 if __name__ == '__main__':
-#    app.run(debug="true",port=port)
-     app.run("0.0.0.0",port=port)
+    app.run(debug="true",port=port)
+    #  app.run("0.0.0.0",port=port)
 
 
 

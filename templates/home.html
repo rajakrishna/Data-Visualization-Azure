@@ -7,6 +7,11 @@
             <input type="submit" value="View">
         </form>
 
+        <!-- <h2>Create Table</h2>
+        <form action="/createtable" method="POST" >
+            <input type="submit" value="Create Table">
+        </form>
+
 
         <h2>Search using Mag and Date</h2>
         <form method="POST" action="/magsearch">
@@ -20,7 +25,7 @@
         <form action="/magnitude" method="POST" >
             Enter magnitude: <input type="text" name="mag">
             <input type="submit" value="Search">
-         </form>
+         </form> -->
 
          <form action="/location" method="POST" >
             Latitude 1: <input type="text" name="lat1">
@@ -29,6 +34,48 @@
             Longitude 2: <input type="text" name="lon2">                               
              <input type="submit" value="Search">
          </form>
+         <div class="container" id="container">
+            <div style="padding: 5px;">
+                <form action="/createtable" method="get" style="padding-bottom: 5px;">
+                   Create Table with Indices
+                    <br>
+                    <input type="submit" value="create">
+               </form>
+               <form action="/randomqueries" method="POST" >
+                Mag 1: <input type="text" name="maxmag">
+                Mag 2: <input type="text" name="minmag">
+                Random Queries: <input type="text" name="count">
+                <select name="Cache">
+                    <option value="1">Use Cache</option>
+                    <option value="0">Do not Use Cache</option>
+                </select>
+                <input type="submit" value="Search">
+             </form>
+            </div>
+            <h4 style="font-weight: bold">Time take for execution: {{ executionTime }} ms</h4>
+            <!-- <h4 style="font-weight: bold">Time take for First Execution: {{ firstExecutionTime }} ms</h4> -->
+    
+            {% if tableData %}
+            <div style="padding: 5px;">
+                Count: {{ tableDataLen }}
+                <table border="2">
+                    <tr style="font-weight: bold">
+                        <td>Latitude</td>
+                        <td>Longitude</td>
+                       <td>Magnitude</td>
+                        <td>Place</td>
+                    </tr>
+                    {% for data in tableData %}
+                        <tr>
+                            <td>{{ data.latitude}}</td>
+                            <td>{{ data.longitude}}</td>
+                            <td>{{ data.mag }}</td>
+                            <td>{{ data.place }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+                {% endif %}
+            </div>
 
 
 {% endblock content %}
