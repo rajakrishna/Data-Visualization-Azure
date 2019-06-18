@@ -90,12 +90,12 @@ def home():
 
 @app.route('/randomqueries', methods=['GET', 'POST'])
 def randomQueries():
-    magnitudeStart = int(request.form['minmag'])
-    magnitudeEnd = int(request.form['maxmag'])
+    magstart = int(request.form['minmag'])
+    magend = int(request.form['maxmag'])
     noOfQueries = int(request.form['count'])
     withCache = int(request.form['Cache'])
-    list_dict_Data = []
-    list_dict_DataDisplay = []
+    list_data = []
+    list_total_dict = []
 
     conn = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:hello1997.database.windows.net,1433;Database=quakes;Uid=raja@hello1997;Pwd={azure@123};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
     cursor = conn.cursor()
@@ -103,29 +103,27 @@ def randomQueries():
     columns = ['time', 'latitude', 'longitude', 'place', 'mag']
 
     if withCache == 0:
-        magnitude_value = round(random.uniform(magnitudeStart, magnitudeEnd), 1)
-        print(magnitude_value)
+        magval = round(random.uniform(magstart, magend), 1)
+        print(magval)
         startTime = time.time()
-        query = "SELECT 'time', latitude, longitude, place, mag FROM all_month WHERE mag = '" + str(magnitude_value) + "'"
+        query = "SELECT 'time', latitude, longitude, place, mag FROM all_month WHERE mag = '" + str(magval) + "'"
         cursor.execute(query)
         endTime = time.time()
-
-        list_dict_DataDisplay = cursor.fetchall()
- 
+        list_total_dict = cursor.fetchall()
         executionTime = (endTime - startTime) * 1000
         firstExecutionTime = executionTime
 
         for i in range(noOfQueries-1):
             totalExecutionTime = totalExecutionTime + executionTime
-            magnitude_value = round(random.uniform(magnitudeStart, magnitudeEnd), 1)
+            magval = round(random.uniform(magstart, magend), 1)
             startTime = time.time()
-            query = "SELECT 'time', latitude , longitude, place, mag FROM all_month WHERE mag = '" + str(magnitude_value) + "'"
+            query = "SELECT 'time', latitude , longitude, place, mag FROM all_month WHERE mag = '" + str(magval) + "'"
             cursor.execute(query)
             endTime = time.time()
-            list_dict_Data = list(cursor.fetchall())
+            list_data = list(cursor.fetchall())
           
             memData = []
-            for row in list_dict_Data:
+            for row in list_data:
                 memDataDict = dict()
                 for i, val in enumerate(row):
                   
@@ -140,22 +138,21 @@ def randomQueries():
         for x in range(noOfQueries):
             print('x')
             print(x)
-            magnitude_value = round(random.uniform(magnitudeStart, magnitudeEnd), 1)
-            query = "SELECT 'time', latitude , longitude, place, mag FROM all_month WHERE mag = '" + str(magnitude_value) + "'"
-            
+            magval = round(random.uniform(magstart, magend), 1)
+            query = "SELECT 'time', latitude , longitude, place, mag FROM all_month WHERE mag = '" + str(magval) + "'"           
             memhash = hashlib.sha256(query.encode()).hexdigest()
             startTime = time.time()
-            list_dict_Data = r.get(memhash)
+            list_data = r.get(memhash)
 
-            if not list_dict_Data:             
+            if not list_data:             
                 print('Not in cache')
                 cursor.execute(query)
-                list_dict_Data = cursor.fetchall()             
+                list_data = cursor.fetchall()             
                 if x == 0:
-                    list_dict_DataDisplay = list_dict_Data
+                    list_total_dict = list_data
                 endTime = time.time()
                 memData = []
-                for row in list_dict_Data:
+                for row in list_data:
                     memDataDict = dict()
                     for i, val in enumerate(row):
                         memDataDict[columns[i]] = val
@@ -169,16 +166,16 @@ def randomQueries():
 
             else:
                 print('In cache')
-                list_dict_Data = loads(list_dict_Data.decode())
+                list_data = loads(list_data.decode())
                 if x == 0:
-                    list_dict_DataDisplay = list_dict_Data
+                    list_total_dict = list_data
                 endTime = time.time()
             executionTime = (endTime - startTime) * 1000
             if x == 0:
                     firstExecutionTime = executionTime
             totalExecutionTime = totalExecutionTime + executionTime
     conn.close()
-    return render_template('home.html', tableData=list_dict_DataDisplay, tableDataLen=list_dict_DataDisplay.__len__(), executionTime=totalExecutionTime, firstExecutionTime=firstExecutionTime)
+    return render_template('home.html', tableData=list_total_dict, tableDataLen=list_total_dict.__len__(), executionTime=totalExecutionTime, firstExecutionTime=firstExecutionTime)
 
 
 
