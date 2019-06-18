@@ -11,8 +11,9 @@ from json import loads, dumps
 
 app = Flask(__name__)
 
-myHostname = "raja.redis.cache.windows.net"
+myHostname = "hello1997.redis.cache.windows.net"
 myPassword="Qjd4+MYTjcKhRRGyoeX7+i8Tc5gKgUPAXrEi86PzJJs="
+
 r = redis.StrictRedis(host=myHostname, port=6380, password=myPassword, ssl=True)
 
 
@@ -42,7 +43,21 @@ def home():
 #     time_taken = (end_time - start_time) * 1000
 #     return time_taken
 
-
+@app.route('/createtable',methods=['GET', 'POST'])
+def createTable():
+    conn = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:hello1997.database.windows.net,1433;Database=quakes;Uid=raja@hello1997;Pwd={azure@123};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
+    cursor = conn.cursor()
+    query = 'CREATE TABLE quakes.dbo.all_month2("time" DATETIME,latitude FLOAT,longitude FLOAT,depth FLOAT,mag FLOAT,magType TEXT,nst INT,gap INT,dmin FLOAT,rms FLOAT,net TEXT,id TEXT,updated DATETIME,place TEXT,type TEXT,horontalError FLOAT,depthError FLOAT,magError FLOAT,magNst INT,status TEXT,locationSource TEXT,magSource TEXT)'
+    startTime = time.time()
+    cursor.execute(query)
+    cursor.execute("CREATE INDEX all_month_mag__index ON quakes.dbo.all_month2 (mag)")
+    cursor.execute("CREATE INDEX all_month_lat__index ON quakes.dbo.all_month2 (latitude)")
+    cursor.execute("CREATE INDEX all_month_long__index ON quakes.dbo.all_month2 (longitude)")
+    conn.commit()
+    endTime = time.time()
+    conn.close()
+    executionTime = (endTime - startTime) * 1000
+    return render_template('createtable.html', executionTime=executionTime)
 
 
 
