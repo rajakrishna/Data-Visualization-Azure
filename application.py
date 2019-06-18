@@ -175,7 +175,7 @@ def randomQueries():
                     firstexectime = exectime
             totalexectime = totalexectime + exectime
     conn.close()
-    return render_template('home.html', tableData=list_total_dict, tableDataLen=list_total_dict.__len__(), exectime=totalexectime, firstexectime=firstexectime)
+    return render_template('home.html', tableData=list_total_dict, tableDataLen=list_total_dict.__len__(), executionTime=totalexectime, firstexectime=firstexectime)
 
 
 
