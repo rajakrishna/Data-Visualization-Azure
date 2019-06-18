@@ -45,8 +45,8 @@
 
 
                <form action="/randomqueries" method="POST" >
-                Mag 1: <input type="text" name="maxmag">
-                Mag 2: <input type="text" name="minmag">
+                Lat 1: <input type="text" name="minmag">
+                Lat 2: <input type="text" name="maxmag">
                 Random Queries: <input type="text" name="count">
                 <select name="Cache">
                     <option value="1">Use Cache</option>
@@ -60,20 +60,19 @@
     
             {% if tableData %}
             <div style="padding: 5px;">
-                Count: {{ tableDataLen }}
+                <!-- Count: {{ tableDataLen }} -->
                 <table border="2">
                     <tr style="font-weight: bold">
-                        <td>Latitude</td>
-                        <td>Longitude</td>
+                        <td>Time</td>
                        <td>Magnitude</td>
                         <td>Place</td>
                     </tr>
                     {% for data in tableData %}
                         <tr>
-                            <td>{{ data.latitude}}</td>
-                            <td>{{ data.longitude}}</td>
-                            <td>{{ data.mag }}</td>
+                           
+                             <td>{{ data.time}}</td>
                             <td>{{ data.place }}</td>
+                            <td>{{ data.mag }}</td>
                         </tr>
                     {% endfor %}
                 </table>

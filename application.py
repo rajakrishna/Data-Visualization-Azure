@@ -115,46 +115,48 @@ def randomQueries():
     conn = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:hello1997.database.windows.net,1433;Database=quakes;Uid=raja@hello1997;Pwd={azure@123};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
     cursor = conn.cursor()
     totalexectime = 0
-    columns = ['time', 'latitude', 'longitude', 'place', 'mag']
+    columns = ['time', 'place', 'mag']
 
     if withCache == 0:
         magval = round(random.uniform(magstart, magend), 1)
         print(magval)
         startTime = time.time()
-        query = "SELECT 'time', latitude, longitude, place, mag FROM all_month WHERE mag = '" + str(magval) + "'"
+        # Select time,mag,place from quake3 where latitude >='"+lat1+"' and latitude <= '"+lat2+"' "
+        query = "SELECT quake3.time,place, mag FROM quake3 WHERE latitude = '" + str(magval) + "'"
         cursor.execute(query)
         endTime = time.time()
         list_total_dict = cursor.fetchall()
         exectime = (endTime - startTime) * 1000
         firstexectime = exectime
-
+        
         for i in range(noOfQueries-1):
             totalexectime = totalexectime + exectime
             magval = round(random.uniform(magstart, magend), 1)
             startTime = time.time()
-            query = "SELECT 'time', latitude , longitude, place, mag FROM all_month WHERE mag = '" + str(magval) + "'"
+            # query = "SELECT 'time', latitude , longitude, place, mag FROM all_month WHERE mag = '" + str(magval) + "'"
+            query = "SELECT quake3.time,place, mag FROM quake3 WHERE latitude = '" + str(magval) + "'"
             cursor.execute(query)
             endTime = time.time()
             list_data = list(cursor.fetchall())
-          
             memData = []
             for row in list_data:
                 memDataDict = dict()
-                for i, val in enumerate(row):
-                  
+                for i, val in enumerate(row):          
                     memDataDict[columns[i]] = val
                 memData.append(memDataDict)
             r.set(query, dumps(memData))
-
-            exectime = (endTime - startTime) * 1000
-         
+            exectime = (endTime - startTime) * 1000  
+        print('hir')     
+        return render_template('home.html', tableData=list_data, executionTime=totalexectime)
     else:
         print('It is inside Redis now')
         for x in range(noOfQueries):
             print('x')
             print(x)
             magval = round(random.uniform(magstart, magend), 1)
-            query = "SELECT 'time', latitude , longitude, place, mag FROM all_month WHERE mag = '" + str(magval) + "'"           
+            # query = "SELECT 'time', latitude , longitude, place, mag FROM all_month WHERE mag = '" + str(magval) + "'"           
+            query = "SELECT quake3.time,place, mag FROM quake3 WHERE latitude = '" + str(magval) + "'"
+
             memhash = hashlib.sha256(query.encode()).hexdigest()
             startTime = time.time()
             list_data = r.get(memhash)
@@ -191,6 +193,45 @@ def randomQueries():
             totalexectime = totalexectime + exectime
     conn.close()
     return render_template('home.html', tableData=list_total_dict, tableDataLen=list_total_dict.__len__(), executionTime=totalexectime, firstexectime=firstexectime)
+
+
+
+# @app.route('/magnitude', methods=['GET','POST'])
+# def mag():
+#     columns = ['time', 'latitude', 'longitude','mag']
+#     mag = str(request.form['mag'])
+
+#     r = redis.StrictRedis(host=myHostname, port=6380,password=myPassword,ssl=True)
+#     startmem=time.time()
+#     query="select time,latitude,longitude,mag from all_month where mag > "+mag
+#     result = r.get(query) 
+#     endmem=time.time()
+#     # print(result)  
+#     if result is None:
+#         start=time.time()
+#         print("retrieved from database")
+#         con = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:karthikgunalan.database.windows.net,1433;Database=assignment3;Uid=karthikgunalan@karthikgunalan;Pwd={Polo5590};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
+#         cur = con.cursor()
+#         cur.execute(query)
+#         rows= list(cur.fetchall())
+#         mem=[]
+#         for row in rows:
+#             memdict=dict()
+#             for j,val in enumerate(row):
+#                 memdict[columns[j]]=val
+#             mem.append(memdict)
+#         r.set(query,dumps(mem))
+#         end=time.time()
+#         print('Time Taken')
+#         print(end-start)
+#         return render_template('magnitude1.html',rows=rows,time=end-start)
+#     else:
+#         result=loads(result.decode("utf-8"))
+#         resultdisplay=result
+#         print('time taken')
+#         print(endmem-startmem)  
+#         return render_template('magnitude2.html',rows=result,time=endmem-startmem)
+
 
 
 
