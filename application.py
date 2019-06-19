@@ -105,136 +105,109 @@ def createTable():
 
 @app.route('/randomqueries', methods=['GET', 'POST'])
 def randomQueries():
-    magstart = int(request.form['minmag'])
-    magend = int(request.form['maxmag'])
-    noOfQueries = int(request.form['count'])
+    flat = int(request.form['minmag'])
+    slat = int(request.form['maxmag'])
+    flatplus = flat+1
+    slatminus  = slat - 1
+
+    Num_Queries = int(request.form['count'])
     withCache = int(request.form['Cache'])
-    list_data = []
-    list_total_dict = []
+
+    list_dict_Data = []
+    list_dict_DataDisplay = []
 
     conn = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:hello1997.database.windows.net,1433;Database=quakes;Uid=raja@hello1997;Pwd={azure@123};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
     cursor = conn.cursor()
-    totalexectime = 0
-    columns = ['time', 'place', 'mag']
+    Tot_Exec_Time = 0
+    columns = ['time', 'mag', 'place']
 
+    # without cache
     if withCache == 0:
-        magval = round(random.uniform(magstart, magend), 1)
-        print(magval)
-        startTime = time.time()
-        # Select time,mag,place from quake3 where latitude >='"+lat1+"' and latitude <= '"+lat2+"' "
-        query = "SELECT quake3.time,place, mag FROM quake3 WHERE latitude = '" + str(magval) + "'"
-        cursor.execute(query)
-        endTime = time.time()
-        list_total_dict = cursor.fetchall()
-        exectime = (endTime - startTime) * 1000
-        firstexectime = exectime
-        
-        for i in range(noOfQueries-1):
-            totalexectime = totalexectime + exectime
-            magval = round(random.uniform(magstart, magend), 1)
-            startTime = time.time()
-            # query = "SELECT 'time', latitude , longitude, place, mag FROM all_month WHERE mag = '" + str(magval) + "'"
-            query = "SELECT quake3.time,place, mag FROM quake3 WHERE latitude = '" + str(magval) + "'"
+        exec_time_list = []
+        querynum = []
+        for i in range(Num_Queries-1):
+
+            
+            flat_random = round(random.uniform(flat, flatplus), 1)
+            slat_random = round(random.uniform(slatminus, slat), 1)
+            Start_Time = time.time()
+            query = "Select time,mag,place from quake3 where latitude >='"+str(flat_random)+"' and latitude <= '"+str(slat_random)+"' "
             cursor.execute(query)
-            endTime = time.time()
-            list_data = list(cursor.fetchall())
-            memData = []
-            for row in list_data:
-                memDataDict = dict()
-                for i, val in enumerate(row):          
-                    memDataDict[columns[i]] = val
-                memData.append(memDataDict)
-            r.set(query, dumps(memData))
-            exectime = (endTime - startTime) * 1000  
-        print('hir')     
-        return render_template('home.html', tableData=list_data, executionTime=totalexectime)
+            End_Time = time.time()
+            list_dict_Data = list(cursor.fetchall())
+            list_dict_DataDisplay = cursor.fetchall()
+         
+
+            Memory_Data = []
+            for row in list_dict_Data:
+                Memory_DataDict = dict()
+                for i, val in enumerate(row):
+                   
+                    Memory_DataDict[columns[i]] = val
+                Memory_Data.append(Memory_DataDict)
+            r.set(query, dumps(Memory_Data))
+
+            Exec_Time = (End_Time - Start_Time) * 1000
+            Tot_Exec_Time = Tot_Exec_Time + Exec_Time
+            exec_time_list.append(Exec_Time)
+            querynum.append(i)
+
     else:
-        print('It is inside Redis now')
-        for x in range(noOfQueries):
+        print('Cache inside')
+        exec_time_list = []
+        querynum = []
+        for x in range(Num_Queries):
+
+            querynum.append(x)
             print('x')
             print(x)
-            magval = round(random.uniform(magstart, magend), 1)
-            # query = "SELECT 'time', latitude , longitude, place, mag FROM all_month WHERE mag = '" + str(magval) + "'"           
-            query = "SELECT quake3.time,place, mag FROM quake3 WHERE latitude = '" + str(magval) + "'"
+            flat_random = round(random.uniform(flat, flatplus), 1)
+            slat_random = round(random.uniform(slatminus, slat), 1)
+            query = "Select time,mag,place from quake3 where latitude >='"+str(flat_random)+"' and latitude <= '"+str(slat_random)+"' "
+            # print("inside else")
+            Memory_hash = hashlib.sha256(query.encode()).hexdigest()
+            Start_Time = time.time()
+            list_dict_Data = r.get(Memory_hash)
 
-            memhash = hashlib.sha256(query.encode()).hexdigest()
-            startTime = time.time()
-            list_data = r.get(memhash)
-
-            if not list_data:             
+            if not list_dict_Data:
+                # print("from db")
                 print('Not in cache')
+
                 cursor.execute(query)
-                list_data = cursor.fetchall()             
-                if x == 0:
-                    list_total_dict = list_data
-                endTime = time.time()
-                memData = []
-                for row in list_data:
-                    memDataDict = dict()
+                list_dict_Data = cursor.fetchall()
+              
+                list_dict_DataDisplay = list_dict_Data
+                End_Time = time.time()
+                Memory_Data = []
+                for row in list_dict_Data:
+                  
+                    Memory_DataDict = dict()
                     for i, val in enumerate(row):
-                        memDataDict[columns[i]] = val
-                    memData.append(memDataDict)
-                r.set(memhash, dumps(memData))
-                exectime = (endTime - startTime) * 1000
-                if x == 0:
-                    firstexectime = exectime
-                totalexectime = totalexectime + exectime
-                
+                     
+                        Memory_DataDict[columns[i]] = val
+                    Memory_Data.append(Memory_DataDict)
+                r.set(Memory_hash, dumps(Memory_Data))
+                print('Hi')
+                Exec_Time = (End_Time - Start_Time) * 1000
+                exec_time_list.append(Exec_Time)
+
+
+                Tot_Exec_Time = Tot_Exec_Time + Exec_Time
+
 
             else:
                 print('In cache')
-                list_data = loads(list_data.decode())
-                if x == 0:
-                    list_total_dict = list_data
-                endTime = time.time()
-            exectime = (endTime - startTime) * 1000
-            if x == 0:
-                    firstexectime = exectime
-            totalexectime = totalexectime + exectime
+                list_dict_Data = loads(list_dict_Data.decode())
+                # if x == 0:
+                list_dict_DataDisplay = list_dict_Data
+                End_Time = time.time()
+                Exec_Time = (End_Time - Start_Time) * 1000
+                exec_time_list.append(Exec_Time)
+                Tot_Exec_Time = Tot_Exec_Time + Exec_Time
     conn.close()
-    return render_template('home.html', tableData=list_total_dict, tableDataLen=list_total_dict.__len__(), executionTime=totalexectime, firstexectime=firstexectime)
-
-
-
-# @app.route('/magnitude', methods=['GET','POST'])
-# def mag():
-#     columns = ['time', 'latitude', 'longitude','mag']
-#     mag = str(request.form['mag'])
-
-#     r = redis.StrictRedis(host=myHostname, port=6380,password=myPassword,ssl=True)
-#     startmem=time.time()
-#     query="select time,latitude,longitude,mag from all_month where mag > "+mag
-#     result = r.get(query) 
-#     endmem=time.time()
-#     # print(result)  
-#     if result is None:
-#         start=time.time()
-#         print("retrieved from database")
-#         con = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:karthikgunalan.database.windows.net,1433;Database=assignment3;Uid=karthikgunalan@karthikgunalan;Pwd={Polo5590};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
-#         cur = con.cursor()
-#         cur.execute(query)
-#         rows= list(cur.fetchall())
-#         mem=[]
-#         for row in rows:
-#             memdict=dict()
-#             for j,val in enumerate(row):
-#                 memdict[columns[j]]=val
-#             mem.append(memdict)
-#         r.set(query,dumps(mem))
-#         end=time.time()
-#         print('Time Taken')
-#         print(end-start)
-#         return render_template('magnitude1.html',rows=rows,time=end-start)
-#     else:
-#         result=loads(result.decode("utf-8"))
-#         resultdisplay=result
-#         print('time taken')
-#         print(endmem-startmem)  
-#         return render_template('magnitude2.html',rows=result,time=endmem-startmem)
-
-
-
-
+    # print(list_dict_Data)
+    return render_template('home.html', tableData=list_dict_DataDisplay,Exec_Time=Tot_Exec_Time, Each_Exec_Time=exec_time_list, Querynum = querynum)
+ 
 
 
 
