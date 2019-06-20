@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+        
+   
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="http://dimplejs.org/dist/dimple.v2.3.0.min.js"></script>
+
+    </head>
+<body>
+        <div> </div>
+        
+        <h1>hello world</h1><br>
+        <p>first </p>
+        <p>
+
+        </p>
+        <p></p>
+        <script type="text/javascript">
+            d3.selectAll("h1").style("color","red");
+            // var svg = dimple.newSvg("body", 1000, 1000,"margin",200);
+            
+            var svg = d3.select("body")
+                .append("svg")
+                .attr("width",1000)
+                .attr("height", 1000)
+                .attr("margin",10000)
+
+            var data = {{a|tojson|safe}};
+            console.log(data);
+            var chart = new dimple.chart(svg, data);
+            chart.addCategoryAxis("x", "latitude");
+            chart.addMeasureAxis("y", "mag");
+            chart.addSeries(null, dimple.plot.bar);
+            chart.draw();
+          </script>
+    
+        
+    
+</body>
+</html>
+
