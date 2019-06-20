@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+    <title>chart</title>
+    <div id="chart"></div>
+    <div id="chartContainer">
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="http://dimplejs.org/dist/dimple.v2.3.0.min.js"></script>
+    <script type="text/javascript">
+    if ("{{ chart }}" == "bar"){
+           // d3.selectAll("h1").style("color","red");
+            // var svg = dimple.newSvg("body", 1000, 1000,"margin",200);
+            var svg = dimple.newSvg("#chartContainer", 1000, 500);
+
+           // var svg = d3.select("body")
+            //    .append("svg")
+             //   .attr("width",1000)
+               // .attr("height", 500);          
+               
+            var data = {{a|tojson|safe}};
+            console.log(data);
+            var chart = new dimple.chart(svg, data);
+            chart.defaultColors = [
+               new dimple.color("orange") // You can use #RGB here
+           ];
+            chart.addCategoryAxis("x", "latitude");
+            chart.addMeasureAxis("y", "mag");
+            chart.addSeries(null, dimple.plot.bar);
+            chart.draw();}
+            
+     else if("{{ chart }}" == "pie")
+    {
+    
+     var svg = dimple.newSvg("#chartContainer", 590, 400);
+     var data = {{ a|tojson|safe }};
+
+    //var svg = d3.select("body")
+      //          .append("svg")
+        //        .attr("width",10000)
+          //      .attr("height", 10000)
+            //    .attr("margin",200);
+            
+      var myChart = new dimple.chart(svg, data);
+
+     // myChart.defaultColors = [
+     //     new dimple.color("#3498db", "#2980b9", 1), // blue
+      //    new dimple.color("#e74c3c", "#c0392b", 1), // red
+        //  new dimple.color("#2ecc71", "#27ae60", 1), // green
+          //new dimple.color("#9b59b6", "#8e44ad", 1), // purple
+          //new dimple.color("#e67e22", "#d35400", 1), // orange
+          //new dimple.color("#f1c40f", "#f39c12", 1), // yellow
+          //new dimple.color("#1abc9c", "#16a085", 1), // turquoise
+          //new dimple.color("#95a5a6", "#7f8c8d", 1)  // gray
+      //];
+      myChart.setBounds(20, 20, 460, 360)
+      myChart.addMeasureAxis("p", "latitude");
+      myChart.addSeries("mag", dimple.plot.pie);
+      myChart.addLegend(500, 20, 90, 300, "left");
+      myChart.draw();
+    }
+
+
+    else if("{{ chart }}" == "scatter")
+{   
+    var svg = d3.select("body")
+                .append("svg")
+                .attr("width",10000)
+                .attr("height", 10000)
+                .attr("margin",200);
+            
+    var data = {{ a|tojson|safe }};
+    var myChart = new dimple.chart(svg, data);
+         myChart.setBounds(60, 30, 900, 500)
+           var x = myChart.addMeasureAxis("x", "latitude");
+           var y = myChart.addMeasureAxis("y", "mag");
+           myChart.addSeries(["latitude", "mag"], dimple.plot.bubble);
+           myChart.addLegend(200, 10, 360, 20, "right");
+           x.overrideMax = 50.00000000;
+           x.overrideMin = -50.00000000;
+           y.overrideMax = 10.00000000;
+           y.overrideMin = -10.00000000;
+           x.ticks = 10;
+           x.ticks = 10;
+           x.tickFormat = ',.7f';
+           y.tickFormat = ',.7f';
+           myChart.draw();
+   }
+   else{
+
+   }
+</script>
+</div>    
+</html>
