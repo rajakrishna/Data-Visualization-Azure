@@ -1,0 +1,28 @@
+{% extends "about.html" %}
+{% block content %}
+
+        <table>
+            <tr>
+                <th>time</th>
+                <th>mag</th>
+                <th>place</th>
+            </tr>
+            {% for row in row %}
+                <tr>
+                    <td>
+                        {{row.time}}
+
+                    </td>
+
+                    <td>
+                        {{row.mag}}
+                    </td>
+   
+                    <td>
+                        {{row.place}}
+                    </td>
+                </tr>
+
+            {% endfor %}
+        </table>
+{% endblock content %}
